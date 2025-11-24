@@ -3,29 +3,52 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 
-
 class MinimalSubscriber(Node):
 
     def __init__(self):
         super().__init__('minimal_subscriber')
-        self.subscription = self.create_subscription(String, 'robot_status', self.listener_callback_power, 10)
-        self.subscription2 = self.create_subscription(String, 'robot_status', self.listener_callback_battery, 10)
-        self.subscription3 = self.create_subscription(String, 'robot_status', self.listener_callback_pos, 10)
-        self.subscription  # prevent unused variable warning
-        
+        self.subscription1 = self.create_subscription(
+            String,
+            'topic',
+            self.listener_callback1,
+            10)
+        self.subscription1 # prevent unused variable warning
 
-    def listener_callback_power(self, msg):
-        if 'Robot OK' in msg.data :
-            self.get_logger().info('Robot OK')
+        self.subscription2 = self.create_subscription(
+            String,
+            'topic',
+            self.listener_callback2,
+            10)
+        self.subscription2 # prevent unused variable warning
 
-    def listener_callback_battery(self, msg):
-        if 'Battery' in msg.data :
-            self.get_logger().info('Battery level detected')
+        self.subscription3 = self.create_subscription(
+            String,
+            'topic',
+            self.listener_callback3,
+            10)
+        self.subscription3 # prevent unused variable warning
 
-    def listener_callback_pos(self, msg):
-        if 'Position' in msg.data :
-            self.get_logger().info('Position detceted')
+    #On récupère le message publié on vérifie que Robot soit OK 
+    def listener_callback1(self, msg):
+        if 'Robot OK' in msg.data:
+            self.get_logger().info('Robot status : OK')
+        else :
+            self.publisher_ = self.create_publisher(String, 'topic', 10)
+            self.get_logger().info('Robot status : OK n est pas recu')
 
+
+
+    #Ensuite on extrait les informations de batterie et position et on les affiche
+    def listener_callback2(self, msg):
+        if 'Robot OK' in msg.data:
+            battery_info = msg.data.split('Battery: ')[1].split('%,')[0]
+            self.get_logger().info('Battery Level: %s%%' % battery_info)
+
+    def listener_callback3(self, msg):
+        if 'Robot OK' in msg.data:
+            position_info = msg.data.split('Position: (')[1].split(')')[0]
+            self.get_logger().info('Position: (%s)' % position_info)
+    
 
 def main(args=None):
     rclpy.init(args=args)
